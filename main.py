@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # ----- Start-up prompt ----- #
     print('Stress-Strain-Plotter V1.0')
     print('')
-    print('Dieses Programm plotted alle Dateien die in "data/config.csv" spezifiziert sind in ein Diagramm')
+    print('Dieses Programm plotted alle Dateien die in "data/config.csv" spezifiziert sind in ein Diagramm.')
     print('')
 
     input0 = input('Nur die gültigen Messdateien plotten? (j/n): ')
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             csvReader.__next__()
 
         for line in csvReader:
-            number = line[0]
+            number = int(line[0])
             width = float(line[1].replace(',', '.'))
             thickness = float(line[2].replace(',', '.'))
             lenght = float(line[3].replace(',', '.'))
@@ -98,6 +98,7 @@ if __name__ == '__main__':
     # ----- Calc all max/ length values ----- #
     for dSet in dataSetList:
         dSet.calcMax()
+        dSet.calcYoungsModulus()
         dSet.calcSize()
 
     # ----- Write data to csv File ----- #
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     # ----- Plot data sets ----- #
     maxStressList = []
     maxStrainList = []
+    yModulusList = []
 
     cmap = pyplot.get_cmap(colorMap)
     colorSet = iter(cmap(np.linspace(0, 0.9, len(dataSetList))))
@@ -159,8 +161,12 @@ if __name__ == '__main__':
 
         maxStressList.append(dSet.maxStress)
         maxStrainList.append(dSet.maxStrain)
+        yModulusList.append(dSet.youngsModulus)
 
-        print(str(dSet.number) + ': MaxStress = ' + str(round(dSet.maxStress, 2)) + 'MPa ; Strain(MaxStress) = ' + str(round(dSet.maxStrain, 2)) + '%')
+        print('%02d' % dSet.number, end=': ')
+        print('MaxStress =', '%5.2f' % dSet.maxStress, end='MPa ;  ')
+        print('Strain(MaxStress) =', '%5.2f' % dSet.maxStrain, end='% ;  ')
+        print('Y-Modulus =', '%5.2f' % dSet.youngsModulus, 'MPa')
 
     # Calc max, mean, standard deviation of the max value
     idx = maxStressList.index(max(maxStressList))
@@ -169,12 +175,22 @@ if __name__ == '__main__':
     maxMaxStrain = max(maxStrainList)
     meanMaxStress = stat.mean(maxStressList)
     meanMaxStrain = stat.mean(maxStrainList)
+    meanYModulus = stat.mean(yModulusList)
     stdevMaxStress = stat.stdev(maxStressList)
     stdevMaxStrain = stat.stdev(maxStrainList)
+    stdevYModulus = stat.stdev(yModulusList)
 
-    print('MaxMaxStress = ' + str(round(maxMaxStress, 2)) + 'MPa ; ' + 'Strain(MaxMaxStress) = ' + str(round(strainOfMaxMaxStress, 2)) + '% ; ' + 'MaxMaxStrain = ' + str(round(maxMaxStrain, 2)) + '%')
-    print('MeanMaxStress = ' + str(round(meanMaxStress, 2)) + 'MPa ; ' + 'MeanMaxStrain = ' + str(round(meanMaxStrain, 2))+ '%')
-    print('StDevMaxStress = ' + str(round(stdevMaxStress, 2)) + 'MPa ; ' + 'StDevMaxStrain = ' + str(round(stdevMaxStrain, 2))+ '%')
+    print()
+    print('MaxMaxStress =', '%5.2f' % maxMaxStress, end='MPa ;  ')
+    print('Strain(MaxMaxStress) =', '%5.2f' % strainOfMaxMaxStress, end='% ;  ')
+    print('MaxMaxStrain =', '%5.2f' % maxMaxStrain, '%')
+    print('MeanMaxStress =', '%5.2f' % meanMaxStress, end='MPa ;  ')
+    print('MeanMaxStrain =', '%5.2f' % meanMaxStrain, end='% ;  ')
+    print('MeanYModule =', '%5.2f' % meanYModulus, 'MPa')
+    print('StDevMaxStress =', '%5.2f' % stdevMaxStress, end='MPa ;  ')
+    print('StDevMaxStrain =', '%5.2f' % stdevMaxStrain, end='% ;  ')
+    print('StDevYModule =', '%5.2f' % stdevYModulus, 'MPa')
+
 
     pyplot.title('Stress strain plot')
     pyplot.xlabel('Strain [%]')
