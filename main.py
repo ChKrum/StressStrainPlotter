@@ -164,8 +164,8 @@ if __name__ == '__main__':
         yModulusList.append(dSet.youngsModulus)
 
         print('%02d' % dSet.number, end=': ')
-        print('MaxStress =', '%5.2f' % dSet.maxStress, end='MPa ;  ')
-        print('Strain(MaxStress) =', '%5.2f' % dSet.maxStrain, end='% ;  ')
+        print('MaxStress =', '%5.2f' % dSet.maxStress, end=' MPa ;  ')
+        print('Strain(MaxStress) =', '%5.2f' % dSet.maxStrain, end=' % ;  ')
         print('Y-Modulus =', '%5.2f' % dSet.youngsModulus, 'MPa')
 
     # Calc max, mean, standard deviation of the max value
@@ -181,15 +181,15 @@ if __name__ == '__main__':
     stdevYModulus = stat.stdev(yModulusList)
 
     print()
-    print('MaxMaxStress =', '%5.2f' % maxMaxStress, end='MPa ;  ')
-    print('Strain(MaxMaxStress) =', '%5.2f' % strainOfMaxMaxStress, end='% ;  ')
-    print('MaxMaxStrain =', '%5.2f' % maxMaxStrain, '%')
-    print('MeanMaxStress =', '%5.2f' % meanMaxStress, end='MPa ;  ')
-    print('MeanMaxStrain =', '%5.2f' % meanMaxStrain, end='% ;  ')
-    print('MeanYModule =', '%5.2f' % meanYModulus, 'MPa')
-    print('StDevMaxStress =', '%5.2f' % stdevMaxStress, end='MPa ;  ')
-    print('StDevMaxStrain =', '%5.2f' % stdevMaxStrain, end='% ;  ')
-    print('StDevYModule =', '%5.2f' % stdevYModulus, 'MPa')
+    print('Max(MaxStress) =', '%5.2f' % maxMaxStress, end=' MPa ;  ')
+    print('Strain(MaxMaxStress) =', '%5.2f' % strainOfMaxMaxStress, end=' % ;  ')
+    print('Max(MaxStrain) =', '%5.2f' % maxMaxStrain, '%')
+    print('Mean(MaxStress) =', '%5.2f' % meanMaxStress, end=' MPa ;  ')
+    print('Mean(Strain(MaxStress)) =', '%5.2f' % meanMaxStrain, end=' % ;  ')
+    print('Mean(Y-Modulus) =', '%5.2f' % meanYModulus, 'MPa')
+    print('StDev(MaxStress) =', '%5.2f' % stdevMaxStress, end=' MPa ;  ')
+    print('StDev(Strain(MaxStress)) =', '%5.2f' % stdevMaxStrain, end=' % ;  ')
+    print('StDev(Y-Modulus) =', '%5.2f' % stdevYModulus, 'MPa')
 
 
     pyplot.title('Stress strain plot')
@@ -201,4 +201,4 @@ if __name__ == '__main__':
 
     # ----- End prompt ----- #
     print('')
-    input('Programm fertig. Zum Beenden Enter drücken')
+    input('Programm fertig. Zum Beenden Enter drücken.')
