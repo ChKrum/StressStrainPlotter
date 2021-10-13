@@ -90,8 +90,8 @@ if __name__ == '__main__':
                 if dispo0 == 0:
                     dispo0 = dispo
 
-                strain = ((dispo-dispo0)/(1000*dSet.length))*100
-                stress = (force-dSet.fOffset)/(dSet.width*dSet.thickness)
+                strain = ((dispo-dispo0)/(1000*dSet.length))*100  # stress (epsilon) in %
+                stress = (force-dSet.fOffset)/(dSet.width*dSet.thickness)  # Strain (sigma) in MPa
 
                 dSet.appendDataPoint(stress, strain)
 

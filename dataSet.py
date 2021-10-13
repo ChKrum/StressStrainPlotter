@@ -26,8 +26,8 @@ class DataSet():
         self.maxStrain = self.strainList[i]
 
     def calcYoungsModulus(self):
-        epsilon1 = self.maxStrain*0.0005
-        epsilon2 = self.maxStrain*0.0025
+        epsilon1 = 0.05
+        epsilon2 = 0.25
 
         list1 = [abs(x - epsilon1) for x in self.strainList]
         i1 = list1.index(min(list1))
