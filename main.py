@@ -13,7 +13,7 @@ import dataSet
 if __name__ == '__main__':
 
     # ----- Init variables ----- #
-    directoryPath = 'data\\'
+    directoryPath = 'dataAllValid\\'
     plotOnlyValid = False
     writeOutput = False
     customColor = False
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             csvReader.__next__()
 
         for line in csvReader:
-            number = int(line[0])
+            number = line[0]
             width = float(line[1].replace(',', '.'))
             thickness = float(line[2].replace(',', '.'))
             lenght = float(line[3].replace(',', '.'))
@@ -163,7 +163,7 @@ if __name__ == '__main__':
         maxStrainList.append(dSet.maxStrain)
         yModulusList.append(dSet.youngsModulus)
 
-        print('%02d' % dSet.number, end=': ')
+        print(dSet.number, end=': ')
         print('MaxStress =', '%5.2f' % dSet.maxStress, end=' MPa ;  ')
         print('Strain(MaxStress) =', '%5.2f' % dSet.maxStrain, end=' % ;  ')
         print('Y-Modulus =', '%5.2f' % dSet.youngsModulus, 'MPa')
