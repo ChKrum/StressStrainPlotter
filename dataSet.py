@@ -42,7 +42,7 @@ class DataSet():
         dEpsilon = epsilon2 - epsilon1
         dSigma = sigma2 - sigma1
 
-        self.youngsModulus = dSigma / dEpsilon
+        self.youngsModulus = 100*dSigma / dEpsilon
 
     def calcSize(self):
         self.size = len(self.strainList)
