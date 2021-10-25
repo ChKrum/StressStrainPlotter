@@ -13,7 +13,7 @@ import dataSet
 if __name__ == '__main__':
 
     # ----- Init variables ----- #
-    directoryPath = 'dataAllValid\\'
+    directoryPath = 'data\\'
     plotOnlyValid = False
     writeOutput = False
     customColor = False
