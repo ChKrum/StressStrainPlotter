@@ -68,8 +68,8 @@ if __name__ == '__main__':
 
     # ----- Remove non-valid data sets (if wanted) ----- #
     if plotOnlyValid:
-        for dSet in dataSetList:
-            if dSet.isValid == False: dataSetList.pop(dataSetList.index(dSet))
+        for dSet in list(dataSetList):
+            if not dSet.isValid: dataSetList.remove(dSet)
 
     # ----- Read-in data sets ----- #
     for dSet in dataSetList:
