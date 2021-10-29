@@ -212,15 +212,16 @@ if __name__ == '__main__':
     customColor = False
 
 # ----- Start-Up Prompt ----- #
-    print('Stress-Strain-Plotter V1.0')
+    print('Stress-Strain-Plotter V2.0')
     print('')
-    print('Dieses Programm plotted alle Dateien die in "data\config.csv" spezifiziert sind in ein Diagramm.')
+    print('Dieses Programm plotted alle Messdatensätze, '
+          'die in einer Konfigurationsdatei spezifiziert sind in ein Diagramm.')
     print('')
 
-    input0 = input('Pfad zur Konfiguratiosdatei (ENTER = "data\config.csv"): ')
+    input0 = input('Pfad zur Konfigurationsdatei (ENTER = "' + DEFAULTCONFIGFILEPATH + '"): ')
     if not input0 == '': configFilePath = input0
 
-    input0 = input('Nur die gültigen Messdateien verarbeiten? (j/n): ')
+    input0 = input('Nur die als gültig markierten Messdatensätze verarbeiten? (j/n): ')
     if input0 == 'j': plotOnlyValid = True
 
     outFilePath = configFilePath[0:configFilePath.rfind('\\') + 1] + OUTPUTFILENAME

@@ -1,4 +1,4 @@
-# Stress-Strain-Interpolator V1.1
+# Stress-Strain-Interpolator V1.0
 #
 # Author: Christian Krumwiede
 # Date: 29.10.21
@@ -174,15 +174,8 @@ if __name__ == '__main__':
     print('Dieses Programm plotted alle Dateien die in "data\config.csv" spezifiziert sind in ein Diagramm.')
     print('')
 
-    input0 = input('Pfad zur Konfiguratiosdatei (ENTER = "data\config.csv"): ')
+    input0 = input('Pfad zur Konfigurationsdatei (ENTER = Standard = "data\config.csv"): ')
     if not input0 == '': configFilePath = input0
-
-    input0 = input('Nur die gültigen Messdateien verarbeiten? (j/n): ')
-    if input0 == 'j': plotOnlyValid = True
-
-    #
-    # input0 = input('Ausgabe in "' + outFilePath + '" schreiben? (j/n): ')
-    #
 
     print('')
 
@@ -190,12 +183,16 @@ if __name__ == '__main__':
     dataSetList = importData(configFilePath, plotOnlyValid)
 
 # ----- Auswählen des zu interpolierenden ----- #
-    print('Eingelesene Datensätze (Nr.: Name; Datei): ')
+    print('Eingelesene Datensätze (Nr.: Name - Datei; Gültig?): ')
 
     for idx, dSet in enumerate(dataSetList):
         print(idx, end=": ")
         print(dSet.name, end=" - ")
-        print(dSet.fileName)
+        print(dSet.fileName, end='; ')
+        if dSet.isValid:
+            print('gültig')
+        else:
+            print('nicht gültig')
 
     input0 = input('Nummer des zu interpolierenden Datensatzes: ')
     if input0 == '':
@@ -204,9 +201,8 @@ if __name__ == '__main__':
         input0 = int(input0)
 
     dataSet = dataSetList[input0]
-    dSetName = dataSetList[input0].name + '-' + dataSetList[input0].fileName
 
-    print('"' + dSetName + '" eingelesen')
+    print('"' + dataSet.name + '-' + dataSet.fileName + '" ausgewählt.')
     print()
 
 # ----- Interpolation ----- #
@@ -241,7 +237,7 @@ if __name__ == '__main__':
 
 # ----- Plot ----- #
     pyplot.title('Spannungs-Dehnungs-Interpolation')
-    pyplot.scatter(dataSet.strainVector, dataSet.stressVector, label=dSetName, color=COLOR_DATA, s=2)
+    pyplot.scatter(dataSet.strainVector, dataSet.stressVector, label=dataSet.name, color=COLOR_DATA, s=2)
     pyplot.plot(strainVectorReduced, fitVectorReduced, color=COLOR_INTERPOLATION, label='Interpolation')
     pyplot.plot(dataSet.maxStrain, dataSet.maxStress, 'x', ms="8", color=COLOR_BREAKPOINT, label='Bruchstelle')
     pyplot.xlabel('Dehnung [%]')
