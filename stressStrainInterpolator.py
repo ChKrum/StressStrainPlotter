@@ -1,4 +1,4 @@
-# Stress-Strain-PLotter V2.0
+# Stress-Strain-Interpolator V1.1
 #
 # Author: Christian Krumwiede
 # Date: 29.10.21
@@ -7,11 +7,17 @@
 import csv
 import matplotlib.pyplot as pyplot
 import numpy as np
+import scipy.optimize as optimize
 
 # ---------- PARAMETER ---------- #
 DEFAULTCONFIGFILEPATH = 'data\\config.csv'
-OUTPUTFILENAME = 'StressStrainData.csv'
-COLORMAP = 'turbo'  # Verfügbare Colormaps siehe https://matplotlib.org/stable/tutorials/colors/colormaps.html
+
+COLOR_DATA = 'black'
+COLOR_BREAKPOINT = 'tab:red'
+COLOR_INTERPOLATION = 'tab:blue'
+
+EXPORTFILENAME = 'Interpolation.csv'
+EXPORTSTEPWIDTH = 0.01  # %
 
 
 # ---------- KLASSEN ---------- #
@@ -149,57 +155,9 @@ def importData(configFilePath, onlyValid):
     return dataSetList
 
 
-def exportData(dataSetList, outFilePath):
-    """
-    exportData:
-    Esportieren der Spannungs-Dehnungsdatensätze in eine gemeinesame csv-Datei
-
-    :param dataSetList: Liste der Datensatz-Objekte
-    :param filepath: Export-Dateipfad
-    :param filename: Export-Dateiname
-    """
-    dataSetLengths = []
-
-    # Längster Datensatz bestimmt Länge der Datei
-    for dSet in dataSetList:
-        dataSetLengths.append(dSet.size)
-
-    nRows = max(dataSetLengths)
-
-    with open(outFilePath, 'w', newline='') as outputFile:
-        csvWriter = csv.writer(outputFile, delimiter=';')
-
-        csvRow = []
-
-        # Schreiben der Kopfzeilen
-        for dSet in dataSetList:
-            csvRow.append(dSet.name)
-            csvRow.append(dSet.fileName)
-
-        csvWriter.writerow(csvRow)
-        csvRow.clear()
-
-        for dSet in dataSetList:
-            csvRow.append('Dehnung [%]')
-            csvRow.append('Spannung [MPa]')
-
-        csvWriter.writerow(csvRow)
-
-        # Schreiben der Datensätze (ggf. Auffüllen mit Nullen, bis zum Ende der Datei)
-        for i in range(nRows):
-            csvRow.clear()
-
-            for dSet in dataSetList:
-                if i > dSet.size - 1:
-                    csvRow.append(0)
-                    csvRow.append(0)
-                else:
-                    strain = str(dSet.strainVector[i]).replace('.', ',')
-                    stress = str(dSet.stressVector[i]).replace('.', ',')
-                    csvRow.append(strain)
-                    csvRow.append(stress)
-
-            csvWriter.writerow(csvRow)
+# Polynom 8ter-Ordnung mit a0=0
+def polynomial8_0(x, a1, a2, a3, a4, a5, a6, a7, a8):
+    return a8 * x ** 8 + a7 * x ** 7 + a6 * x ** 6 + a5 * x ** 5 + a4 * x ** 4 + a3 * x ** 3 + a2 * x ** 2 + a1 * x
 
 
 # ---------- MAIN ---------- #
@@ -209,10 +167,9 @@ if __name__ == '__main__':
     configFilePath = DEFAULTCONFIGFILEPATH
     plotOnlyValid = False
     writeOutput = False
-    customColor = False
 
 # ----- Start-Up Prompt ----- #
-    print('Stress-Strain-Plotter V1.0')
+    print('Stress-Strain-Interpolator V1.0')
     print('')
     print('Dieses Programm plotted alle Dateien die in "data\config.csv" spezifiziert sind in ein Diagramm.')
     print('')
@@ -223,90 +180,72 @@ if __name__ == '__main__':
     input0 = input('Nur die gültigen Messdateien verarbeiten? (j/n): ')
     if input0 == 'j': plotOnlyValid = True
 
-    outFilePath = configFilePath[0:configFilePath.rfind('\\') + 1] + OUTPUTFILENAME
-    input0 = input('Ausgabe in "' + outFilePath + '" schreiben? (j/n): ')
-    if input0 == 'j': writeOutput = True
-
-    input0 = input('Benutzerdefinierte Farben verwenden? (j/n): ')
-    if input0 == 'j': customColor = True
+    #
+    # input0 = input('Ausgabe in "' + outFilePath + '" schreiben? (j/n): ')
+    #
 
     print('')
 
 # ----- Einlesen der in der Config-Datei spezifizierten Datensätze ----- #
     dataSetList = importData(configFilePath, plotOnlyValid)
 
-# ----- Ggf. Daten in csv Schreiben ----- #
-    if writeOutput:
-        exportData(dataSetList, outFilePath)
+# ----- Auswählen des zu interpolierenden ----- #
+    print('Eingelesene Datensätze (Nr.: Name; Datei): ')
 
-# ----- Berechnen der statistischen Angaben ----- #
-    maxStressList = []
-    maxStrainList = []
-    yModulusList = []
+    for idx, dSet in enumerate(dataSetList):
+        print(idx, end=": ")
+        print(dSet.name, end=" - ")
+        print(dSet.fileName)
 
-    for dSet in dataSetList:
-        maxStressList.append(dSet.maxStress)
-        maxStrainList.append(dSet.maxStrain)
-        yModulusList.append(dSet.youngsModulus)
+    input0 = input('Nummer des zu interpolierenden Datensatzes: ')
+    if input0 == '':
+        input0 = 0
+    else:
+        input0 = int(input0)
 
-    # Umwandeln in Vektoren
-    maxStressVector = np.array(maxStressList)
-    maxStrainVector = np.array(maxStrainList)
-    yModulusVector = np.array(yModulusList)
+    dataSet = dataSetList[input0]
+    dSetName = dataSetList[input0].name + '-' + dataSetList[input0].fileName
 
-    # Berechnen der max. Spannng und der dazugehörigen Dehnung
-    maxStress = maxStressVector.max()
-    idx = int(np.where(maxStressVector == maxStress)[0])
-    strainOfMaxStress = maxStrainVector[idx]
+    print('"' + dSetName + '" eingelesen')
+    print()
 
-    # Berechnen der max. Dehnung
-    maxStrain = maxStrainVector.max()
+# ----- Interpolation ----- #
+    # Beschränken der Interpolation auf Bereich bis Bruchstelle
+    idx = int(np.where(dataSet.stressVector == dataSet.maxStress)[0])
+    strainVectorReduced = dataSet.strainVector[0:idx+1]
+    stressVectorReduced = dataSet.stressVector[0:idx+1]
 
-    # Berechnen der Mittelwerte und Standartabweichungen
-    meanMaxStress = np.mean(maxStressList)
-    meanMaxStrain = np.mean(maxStrainList)
-    meanYModulus = np.mean(yModulusList)
-    stdevMaxStress = np.std(maxStressList)
-    stdevMaxStrain = np.std(maxStrainList)
-    stdevYModulus = np.std(yModulusList)
+    # Eigentliche Interpolation (bzw. Curve Fit)
+    popt, _ = optimize.curve_fit(polynomial8_0, strainVectorReduced, stressVectorReduced)
+    fitVectorReduced = polynomial8_0(strainVectorReduced, popt[0], popt[1], popt[2], popt[3], popt[4], popt[5], popt[6],
+                                     popt[7])
+
+    # Fehlerberechnung
+    errorVector = stressVectorReduced - fitVectorReduced
+    magnitudeErrorVector = np.sqrt(errorVector ** 2)
+    magnitudeErrorVectorPercent = magnitudeErrorVector / stressVectorReduced
+    rmsError = np.mean(magnitudeErrorVector)
 
 # ----- Print ----- #
-    print('Parameterausgabe:')
-
-    for dSet in dataSetList:
-        print(dSet.name, end=': ')
-        print('MaxSpannung =', '%5.2f' % dSet.maxStress, end=' MPa ;  ')
-        print('Dehnung(MaxSpannung) =', '%5.2f' % dSet.maxStrain, end=' % ;  ')
-        print('E-Modul =', '%5.2f' % dSet.youngsModulus, 'MPa')
-
+    print('Koeffizienten von "f(x) = a8*x^8 + a7*x^7 + a6*x^6 + a5*x^5 + a4*x^4 + a3*x^3 + a2*x^2 + a1^x + 0": ')
+    for i, p in enumerate(popt):
+        print('a' + str(i+1) + ' = ' + str(p))
+    print('für Dehnung innerhalb [0:%f]%% ' % dataSet.maxStrain)
     print()
-    print('Max(MaxSpannung) =', '%5.2f' % maxStress, end=' MPa ;  ')
-    print('Dehnung(Max(MaxSpannung)) =', '%5.2f' % strainOfMaxStress, end=' % ;  ')
-    print('Max(Dehnung(MaxSpannung)) =', '%5.2f' % maxStrain, '%')
-    print('Mittel(MaxSpannung) =', '%5.2f' % meanMaxStress, end=' MPa ;  ')
-    print('Mittel(Dehnung(MaxSpannung)) =', '%5.2f' % meanMaxStrain, end=' % ;  ')
-    print('Mittel(E-Modul) =', '%5.2f' % meanYModulus, 'MPa')
-    print('St.Abw.(MaxSpannung) =', '%5.2f' % stdevMaxStress, end=' MPa ;  ')
-    print('St.Abw.(Dehnung(MaxSpannung)) =', '%5.2f' % stdevMaxStrain, end=' % ;  ')
-    print('St.Abw.(E-Modul) =', '%5.2f' % stdevYModulus, 'MPa')
+
+    print('Abweichung: ')
+    print('Fehler_RMS:', rmsError, 'MPa')
+    print('max(Fehler_Absolut):', magnitudeErrorVector.max(), 'MPa')
+    print('max(Fehler_Relativ):', magnitudeErrorVectorPercent.max(), '%')
+    print()
 
 # ----- Plot ----- #
-    cmap = pyplot.get_cmap(COLORMAP)
-    colorSet = iter(cmap(np.linspace(0, 0.9, len(dataSetList))))
-
-    for dSet in dataSetList:
-        if customColor:
-            pyplot.plot(dSet.strainVector, dSet.stressVector, label=dSet.name, color=dSet.color)
-        else:
-            pyplot.plot(dSet.strainVector, dSet.stressVector, label=dSet.name, color=next(colorSet))
-
-    pyplot.title('Spannungs-Dehnungs-Diagramm')
+    pyplot.title('Spannungs-Dehnungs-Interpolation')
+    pyplot.scatter(dataSet.strainVector, dataSet.stressVector, label=dSetName, color=COLOR_DATA, s=2)
+    pyplot.plot(strainVectorReduced, fitVectorReduced, color=COLOR_INTERPOLATION, label='Interpolation')
+    pyplot.plot(dataSet.maxStrain, dataSet.maxStress, 'x', ms="8", color=COLOR_BREAKPOINT, label='Bruchstelle')
     pyplot.xlabel('Dehnung [%]')
     pyplot.ylabel('Spannung [MPa]')
     pyplot.grid(True)
     pyplot.legend()
     pyplot.show()
-
-# ----- End-Prompt ----- #
-    print('')
-    input('Programm fertig. Zum Beenden Enter drücken.')
